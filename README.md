@@ -6,8 +6,6 @@ In this repository I will add some realization of most common ( or not) ML from 
 
 
 Already done:
-- [KNN Classifier](https://github.com/Rezzenmann/ML-Algorigthms-in-Code/blob/main/KNN.py:// "KNN Classifier")
-- [Linear Regression using OLS and Gradient Descent](https://github.com/Rezzenmann/ML-Algorigthms-in-Code/blob/main/Linear_Regression.py:// "Linear Regression using OLS and Gradient Descent")
-
-
+- [KNN Classifier]
+- [Linear Regression using OLS and Gradient Descent]
 
