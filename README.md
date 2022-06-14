@@ -8,4 +8,5 @@ In this repository I will add some realization of most common ( or not) ML from 
 Already done:
 - KNN Classifier
 - Linear Regression using OLS and Gradient Descent
+- Logistic Regression
 
