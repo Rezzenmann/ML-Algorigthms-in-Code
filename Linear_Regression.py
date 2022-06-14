@@ -1,7 +1,7 @@
 import numpy as np
 
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import mean_squared_error, mean_absolute_error
+from sklearn.model_selection import KFold
+from sklearn.metrics import mean_squared_error
 from sklearn.linear_model import LinearRegression
 from sklearn.datasets import load_diabetes
 
@@ -9,7 +9,7 @@ from sklearn.datasets import load_diabetes
 class LinearRegressionOLS:
     ## equation of w  = (X.T @ X)**-1 @ X.T @ y
 
-    def train(self, X, y):
+    def fit(self, X, y):
 
         # Initializing out base feature matrix and target vector
         # Also, we add a new column with only ones to the beginning of X matrix for the intercept
@@ -44,12 +44,12 @@ class LinearRegressionOLS:
 
 class LinearRegressionGradient:
     # init of basic constants
-    def __init__(self, lrate=0.01, epochs=100):
+    def __init__(self, lrate=0.01, epochs=1000):
         self.lrate = lrate
         self.epochs = epochs
 
     # For training I've used MSE as the Loss function
-    def train(self, X, y):
+    def fit(self, X, y):
         self.X_train = X
         self.y_train = y
         
@@ -59,7 +59,7 @@ class LinearRegressionGradient:
 
         # iterating via epochs and constantly upgrading our values
         for _ in range(self.epochs):
-            self.y_pred =  X @ self.weights + self.intercept
+            self.y_pred = self.X_train @ self.weights + self.intercept
             self.intercept = self.intercept -  self.lrate * self._dldi()
             self.weights = self.weights - self.lrate * self._dldw()
 
@@ -84,25 +84,16 @@ if __name__ == '__main__':
     data = load_diabetes()
     X, y = data.data, data.target
 
-    X_train, X_test, y_train, y_test =  train_test_split(X, y, test_size=0.25, random_state=0)
+    models = [LinearRegressionOLS, LinearRegressionGradient, LinearRegression]
+    kf = KFold(n_splits=5, random_state=0, shuffle=True)
+    model_scores = {}
+    for model in models:
+        scores = []
+        for train_indx, test_indx in kf.split(X, y):
+            clf = model()
+            clf.fit(X[train_indx], y[train_indx])
+            clf_pred = clf.predict(X[test_indx])
+            scores.append(mean_squared_error(y[test_indx], clf_pred))
+        model_scores[model] = np.mean(scores)
 
-    # Scratch version of Linear Regression using OLS
-
-    lreg_scratch = LinearRegressionOLS()
-    lreg_scratch.train(X_train, y_train)
-    y_pred_scratch = lreg_scratch.predict(X_test)
-    print('Scratch Version', round(mean_absolute_error(y_test, y_pred_scratch),3), round(mean_squared_error(y_test, y_pred_scratch),3))
-
-    # Scratch version of Linear Regression using Gradient Descent
-    # It needs to be tuned to get better results
-    lreg_grad = LinearRegressionGradient()
-    lreg_grad.train(X_train, y_train)
-    y_pred_grad = lreg_grad.predict(X_test)
-    print('Gradient Version', round(mean_absolute_error(y_test, y_pred_grad),3), round(mean_squared_error(y_test, y_pred_grad),3))
-
-
-    # Sklearn's Linear Regression 
-    lreg_sklearn = LinearRegression()
-    lreg_sklearn.fit(X_train, y_train)
-    y_pred_sklearn = lreg_sklearn.predict(X_test)
-    print('Sklearn Version', round(mean_absolute_error(y_test, y_pred_sklearn),3), round(mean_squared_error(y_test, y_pred_sklearn),3))
+    print(model_scores)

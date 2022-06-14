@@ -1,21 +1,20 @@
 import numpy as np
-import pandas as pd
 
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import accuracy_score, roc_auc_score, f1_score, classification_report
+from sklearn.model_selection import StratifiedShuffleSplit
+from sklearn.metrics import  f1_score
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.datasets import load_iris
 from collections import Counter
 
 
 class KNN:
-    def __init__(self, k=3):
-        self.k = k
+    def __init__(self, n_neighbors=3):
+        self.k = n_neighbors
 
     def _euclidean_distance(self, x1, x2):
         return np.sqrt(np.sum((x1-x2)**2))
     
-    def train(self, X, y):
+    def fit(self, X, y):
         self.X_train = X
         self.y_train = y
 
@@ -41,16 +40,18 @@ class KNN:
 if __name__ == '__main__':
     data = load_iris()
     X, y = data.data, data.target
+    
+    models = [KNN, KNeighborsClassifier]
+    sss = StratifiedShuffleSplit(n_splits=5, test_size=0.2, random_state=0)
+    model_scores = {}
+    for model in models:
+        scores = []
+        for train_indx, test_indx in sss.split(X, y):
+            clf = model(n_neighbors=5)
+            clf.fit(X[train_indx], y[train_indx])
+            clf_pred = clf.predict(X[test_indx])
+            scores.append(f1_score(y[test_indx], clf_pred, average='weighted'))
+        model_scores[model] = np.mean(scores)
 
-    X_train, X_test, y_train, y_test =  train_test_split(X, y, test_size=0.25, random_state=0)
-
-    pure_knn_clf = KNN()
-    pure_knn_clf.train(X_train, y_train)
-    pure_knn_pred = pure_knn_clf.predict(X_test)
-    print(classification_report(y_test, pure_knn_pred))
-
-    sklearn_knn_clf = KNeighborsClassifier(n_neighbors=3)
-    sklearn_knn_clf.fit(X_train, y_train)
-    sklearn_knn_pred = sklearn_knn_clf.predict(X_test)
-    print(classification_report(y_test, sklearn_knn_pred))
+    print(model_scores)
     
